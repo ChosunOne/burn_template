@@ -1,0 +1,8 @@
+[package]
+name = "burn_template"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+burn = { version = "^0.13.2", features = ["wgpu", "train", "metrics"]}
+serde = "^1.0.200"
