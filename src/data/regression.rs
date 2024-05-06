@@ -5,7 +5,10 @@ use burn::{
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct DatasetItem {}
+pub struct DatasetItem {
+    pub value: f64,
+    pub inputs: Vec<f64>,
+}
 
 #[derive(Clone)]
 pub struct DatasetBatcher<B: Backend> {
@@ -21,7 +24,7 @@ impl<B: Backend> DatasetBatcher<B> {
 #[derive(Clone, Debug)]
 pub struct Batch<B: Backend> {
     pub inputs: Tensor<B, 1>,
-    pub targets: Tensor<B, 1, Int>,
+    pub targets: Tensor<B, 2, Float>,
 }
 
 impl<B: Backend> Batcher<DatasetItem, Batch<B>> for DatasetBatcher<B> {

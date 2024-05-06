@@ -16,13 +16,15 @@ use burn::{
 };
 
 use crate::{
-    data::{Data, DatasetBatcher},
-    model::ClassificationModelConfig,
+    data::classification::{Data, DatasetBatcher},
+    model::classification::ModelConfig,
 };
 
+use super::{create_artifact_dir, get_last_epoch};
+
 #[derive(Config)]
-pub struct ClassificationTrainingConfig {
-    pub model: ClassificationModelConfig,
+pub struct TrainingConfig {
+    pub model: ModelConfig,
     pub optimizer: AdamConfig,
     #[config(default = 10)]
     pub num_epochs: usize,
@@ -38,14 +40,9 @@ pub struct ClassificationTrainingConfig {
     pub starting_epoch: usize,
 }
 
-fn create_artifact_dir(artifact_dir: &str) {
-    std::fs::remove_dir_all(artifact_dir).ok();
-    std::fs::create_dir_all(artifact_dir).ok();
-}
-
 pub fn train<B: AutodiffBackend>(
     artifact_dir: &str,
-    config: ClassificationTrainingConfig,
+    config: TrainingConfig,
     device: B::Device,
     fresh: bool,
 ) {
@@ -57,7 +54,7 @@ pub fn train<B: AutodiffBackend>(
             .expect("Failed to save config.json");
         config
     } else {
-        ClassificationTrainingConfig::load(format!("{artifact_dir}/config.json"))
+        TrainingConfig::load(format!("{artifact_dir}/config.json"))
             .expect("Failed to load config file.")
     };
 
@@ -113,24 +110,4 @@ pub fn train<B: AutodiffBackend>(
     model_trained
         .save_file(format!("{artifact_dir}/model"), &CompactRecorder::new())
         .expect("Failed to save trained model");
-}
-
-fn get_last_epoch(artifact_dir: &str) -> usize {
-    let mut max_epoch = 0;
-    for entry in std::fs::read_dir(Path::new(&format!("{artifact_dir}/train")))
-        .expect("Failed to read artifact directory")
-    {
-        let file_name = entry.expect("Failed to read entry").file_name();
-        let file_name_str = file_name.to_string_lossy();
-
-        if let Some(epoch_str) = file_name_str.strip_prefix("epoch-") {
-            if let Ok(epoch) = epoch_str.parse::<usize>() {
-                if epoch > max_epoch {
-                    max_epoch = epoch;
-                }
-            }
-        }
-    }
-
-    max_epoch
 }
